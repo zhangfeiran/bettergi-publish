@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_main:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: babalae/better-genshin-impact
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/BetterGenshinImpact.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - run: dotnet publish -c Release -p:PublishProfile=FolderProfile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: main
+          path: BetterGenshinImpact/bin/x64/Release/net8.0-windows10.0.22621.0/publish/win-x64/
+
+  build_map_editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: huiyadanli/bettergi-map
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm install
+      - run: npm run build:single
+      - uses: actions/upload-artifact@v4
+        with:
+          name: map_editor
+          path: dist/
+
+  build_scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: huiyadanli/bettergi-scripts-web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm install
+      - run: npm run build:single
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scripts
+          path: dist/
+
+  pack:
+    runs-on: ubuntu-latest
+    needs: [build_main, build_map_editor, build_scripts]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: main
+          path: dist/BetterGI
+      - uses: actions/download-artifact@v4
+        with:
+          name: map_editor
+          path: dist/BetterGI/Assets/Map/Editor
+      - uses: actions/download-artifact@v4
+        with:
+          name: scripts
+          path: dist/BetterGI/Assets/Web/ScriptRepo
+      - run: |
+          find "dist/BetterGI" -type f -name "*.lib" -exec rm -f {} \;
+          find "dist/BetterGI" -type f -name "*ffmpeg*.dll" -exec rm -f {} \;
+      - run: |
+          sudo apt update
+          sudo apt install zstd p7zip-full -y
+
+          for file in *.zst; do
+            if [ -f "$file" ]; then
+              output_file="dist/BetterGI/Assets/Map/${file%.zst}"
+              zstd -d "$file" -o "$output_file"
+              echo "$file -> $output_file"
+            fi
+          done
+
+          7z a publish.7z dist/BetterGI -t7z -mx=5 -mf=BCJ2 -r -y
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publish
+          path: publish.7z
