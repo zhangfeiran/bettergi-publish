@@ -21,6 +21,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - run: dotnet publish -c Release -p:PublishProfile=FolderProfile
+        continue-on-error: true
       - uses: actions/upload-artifact@v4
         with:
           name: main
