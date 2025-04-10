@@ -52,11 +52,12 @@ jobs:
     needs: [build_web_map_editor, build_web_scripts_list]
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
+    env:
+      DOTNET_INSTALL_DIR: "D:\\dotnet"
     steps:
       - uses: actions/checkout@v4
         with:
           repository: zhangfeiran/better-genshin-impact
-      - run: $env:DOTNET_INSTALL_DIR = "D:\dotnet"
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
