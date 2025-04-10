@@ -13,45 +13,45 @@ on:
           - dev
 
 jobs:
-  build_web_map_editor:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: huiyadanli/bettergi-map
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm install
-      - run: npm run build:single
-      - uses: actions/upload-artifact@v4
-        with:
-          name: web_map_editor
-          path: dist/
+  # build_web_map_editor:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         repository: huiyadanli/bettergi-map
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: 'npm'
+  #     - run: npm install
+  #     - run: npm run build:single
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: web_map_editor
+  #         path: dist/
 
-  build_web_scripts_list:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: huiyadanli/bettergi-scripts-web
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm install
-      - run: npm run build:single
-      - uses: actions/upload-artifact@v4
-        with:
-          name: web_scripts_list
-          path: dist/
+  # build_web_scripts_list:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         repository: huiyadanli/bettergi-scripts-web
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: 'npm'
+  #     - run: npm install
+  #     - run: npm run build:single
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: web_scripts_list
+  #         path: dist/
   
   build_dist:
     runs-on: self-hosted
-    needs: [build_web_map_editor, build_web_scripts_list]
-    outputs:
-      version: ${{ steps.extract_version.outputs.version }}
+    # needs: [build_web_map_editor, build_web_scripts_list]
+    # outputs:
+    #   version: ${{ steps.extract_version.outputs.version }}
     env:
       DOTNET_INSTALL_DIR: "D:\\dotnet"
     steps:
@@ -88,30 +88,30 @@ jobs:
             New-Item -Path "dist/BetterGI" -ItemType Directory
             xcopy "$sourceDir\*" ".\dist\BetterGI\" /E /H /I /Y
       # 下载前面构建好的web内容
-      - uses: actions/download-artifact@v4
-        with:
-          name: web_map_editor
-          path: dist/BetterGI/Assets/Map/Editor
-      - uses: actions/download-artifact@v4
-        with:
-          name: web_scripts_list
-          path: dist/BetterGI/Assets/Web/ScriptRepo
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: web_map_editor
+      #     path: dist/BetterGI/Assets/Map/Editor
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: web_scripts_list
+      #     path: dist/BetterGI/Assets/Web/ScriptRepo
       # 下载构建 repo 的内容补充数据
-      - uses: actions/checkout@v4
-        with:
-          repository: zhangfeiran/bettergi-publish
-          path: publish
-      - name: 🗜️ Extract Map
-        run: |
-          cd publish
-          Get-ChildItem -Filter *.zst | ForEach-Object {
-              if ($_.PSIsContainer -eq $false) {
-                  $file = $_.Name
-                  $output_file = "..\dist\BetterGI\Assets\Map\$($file -replace '.zst$', '')"
-                  & zstd -d $file -o $output_file
-                  Write-Host "$file -> $output_file"
-              }
-          }
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: zhangfeiran/bettergi-publish
+      #     path: publish
+      # - name: 🗜️ Extract Map
+      #   run: |
+      #     cd publish
+      #     Get-ChildItem -Filter *.zst | ForEach-Object {
+      #         if ($_.PSIsContainer -eq $false) {
+      #             $file = $_.Name
+      #             $output_file = "..\dist\BetterGI\Assets\Map\$($file -replace '.zst$', '')"
+      #             & zstd -d $file -o $output_file
+      #             Write-Host "$file -> $output_file"
+      #         }
+      #     }
       # 生成更新器
       # - name: 📥 Download kachina-builder release
       #   if: ${{ github.event.inputs.kachina-channel == 'release' }}
