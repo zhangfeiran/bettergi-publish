@@ -2,3 +2,7 @@
 *.bat
 Assets
 Map
+/node_modules
+/actions-runner
+package-lock.json
+package.json
